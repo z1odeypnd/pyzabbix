@@ -51,10 +51,12 @@ class ZabbixSender(object):
 
     def _make_request(self):
         """Request/response package header and data length described in oficial Zabbix documentation
-        https://www.zabbix.com/documentation/4.2/manual/appendix/protocols/header_datalen <PROTOCOL> - "ZBXD" (4
-        bytes). <FLAGS> -the protocol flags, (1 byte). 0x01 - Zabbix communications protocol, 0x02 - compression).
+        https://www.zabbix.com/documentation/4.2/manual/appendix/protocols/header_datalen
+        <PROTOCOL> - "ZBXD" (4 bytes).
+        <FLAGS> - the protocol flags, (1 byte). 0x01 - Zabbix communications protocol, 0x02 - compression).
         <DATALEN> - data length (4 bytes). 1 will be formatted as 01/00/00/00 (four bytes, 32 bit number in
-        little-endian format). <RESERVED> - reserved for protocol extensions (4 bytes). """
+            little-endian format).
+        <RESERVED> - reserved for protocol extensions (4 bytes). """
         logging.debug("Create request packet...")
         zbx_protocol = "ZBXD"
         zbx_flags = "\1"
