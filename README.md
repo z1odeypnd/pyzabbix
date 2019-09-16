@@ -11,7 +11,7 @@ Example
 --------
 
 ZabbixSender
-~~~~~~~~
+
 ```python
 from pyzabbix import ZabbixSender
 
