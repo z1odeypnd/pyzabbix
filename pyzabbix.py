@@ -8,21 +8,22 @@ import struct
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
+"""
+    Author: Andrey Shokhin (ashohin@neoflex.ru)
+    Common path: /etc/zabbix/scripts/pyzabbix/pyzabbix.py
+"""
+
 
 class ZabbixSender(object):
     """part of https://github.com/zabbix/zabbix/tree/master/src/zabbix_sender"""
 
-    def __init__(self, **kwargs):
-        self.zabbix_server = '127.0.0.1'
-        if 'zabbix_server' in kwargs.keys():
-            self.zabbix_server = kwargs["zabbix_server"]
-        self.zabbix_port = 10051
-        if 'zabbix_port' in kwargs.keys():
-            self.zabbix_port = kwargs["zabbix_port"]
+    def __init__(self, zabbix_server='127.0.0.1', zabbix_port=10051, connection_timeout=10):
+        self.zabbix_server = zabbix_server
+        self.zabbix_port = zabbix_port
         self._host = None
         self._key = None
         self._value = None
-        self._connection_timeout = 10
+        self._connection_timeout = connection_timeout
         self._response = None
         self._connection = None
         self._metrics_message = []
@@ -74,11 +75,21 @@ class ZabbixSender(object):
             self._connection.connect((self.zabbix_server, self.zabbix_port))
             logging.debug("Send request packet to server: '{}:{}'".format(self.zabbix_server, self.zabbix_port))
             self._connection.sendall(self._metrics_packet)
-        except socket.timeout:
+        except socket.timeout as sotm:
             self._connection.close()
-            raise socket.timeout
+            logging.debug("Connection timeout to host {}:{}! "
+                             "Timeout {} sec. Error: '{}'.".format(self.zabbix_server, self.zabbix_port,
+                                                                   self._connection_timeout, sotm))
+            raise sotm
+        except OSError as ose:
+            self._connection.close()
+            logging.debug("Connection failed to host {}:{} with error '{}'!".format(self.zabbix_server,
+                                                                                       self.zabbix_port, ose))
+            raise ose
         except Exception as ex:
             self._connection.close()
+            logging.debug("Connection failed to host {}:{} with exception '{}'!".format(self.zabbix_server,
+                                                                                           self.zabbix_port, ex))
             raise ex
 
     def _parse_response(self):
@@ -110,10 +121,10 @@ class ZabbixSender(object):
         if self._response["response"] != "success" or self._response["info"]["failed"] != 0:
             self._return_code += 1
 
-    def send_metrics(self, **kwargs):
-        self._host = kwargs["host"]
-        self._key = kwargs["key"]
-        self._value = kwargs["value"]
+    def send_metrics(self, host=None, key=None, value=None):
+        self._host = host
+        self._key = key
+        self._value = value
         logging.debug("Create metrics message...")
         self._create_request_body()
         logging.debug("Create new connection.")
@@ -128,9 +139,14 @@ class ZabbixSender(object):
             pass
 
     @property
-    def host(self):
-        """Must contains hostname same as zabbix field 'Host name' in Zabbix -> Configuration -> Hosts -> your_host"""
-        return self._host
+    def request(self):
+        """Return request body in json format"""
+        try:
+            request_body = json.loads(self._request_body.decode("utf-8"))
+        except AttributeError:
+            request_body = None
+        request_body_json = json.dumps(request_body, indent=4, sort_keys=False, ensure_ascii=False)
+        return request_body_json
 
     @property
     def response(self):

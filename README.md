@@ -19,4 +19,10 @@ from pyzabbix import ZabbixSender
 zabbix_sender = ZabbixSender(zabbix_server='127.0.0.1', zabbix_port=10051)
 # Send metric to zabbix trapper
 zabbix_sender.send_metrics(host='localhost', key='zabbix_trapper.key', value=1)
+# Print request body
+print(zabbix_sender.request)
+# Print response body
+print(zabbix_sender.response)
+# Print return code from zabbix sender
+print(zabbix_sender.rc)
 ```
