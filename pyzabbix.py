@@ -8,11 +8,6 @@ import struct
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-"""
-    Author: Andrey Shokhin (ashohin@neoflex.ru)
-    Common path: /etc/zabbix/scripts/pyzabbix/pyzabbix.py
-"""
-
 
 class ZabbixSender(object):
     """part of https://github.com/zabbix/zabbix/tree/master/src/zabbix_sender"""
